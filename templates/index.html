@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravelSwarm</title>
+    
+    <!-- Design System Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-dot-grid">
+
+    <!-- Playful Geometric Background Confetti / Blobs -->
+    <div class="page-bg" aria-hidden="true">
+        <div class="geo-shape shape-circle"></div>
+        <div class="geo-shape shape-square"></div>
+        <div class="geo-shape shape-pill"></div>
+        <div class="geo-shape shape-triangle"></div>
+    </div>
+
+    <main class="app-container">
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="badge">
+                <span class="badge-icon-bubble">✈️</span>
+                <span>TravelSwarm AI &bull; Multi-Agent Travel Planner</span>
+            </div>
+
+            <h1>
+                Plan Your Perfect Trip <span class="highlight-squiggle">with AI</span>
+            </h1>
+
+            <p>
+                Search flights, discover hotels, and generate a complete day-by-day travel itinerary powered by multi-agent LangGraph intelligence.
+            </p>
+        </section>
+
+        <!-- Main Planner Card -->
+        <section class="planner-card">
+            <div class="card-corner-accent"></div>
+
+            <div class="card-header">
+                <div>
+                    <h2>Where do you want to go?</h2>
+                    <p>
+                        Example: <em>Plan a complete 7 days Japan trip from Pakistan under 2 lakhs.</em>
+                    </p>
+                </div>
+
+                <div class="status-pill">
+                    <span class="status-dot"></span>
+                    Online & Ready
+                </div>
+            </div>
+
+            <div class="input-area">
+                <textarea
+                    id="userInput"
+                    placeholder="Plan a complete 7 days Dubai trip including flights, hotels and sightseeing under 2 lakhs..."
+                ></textarea>
+
+                <button id="sendBtn" onclick="sendMessage()">
+                    <span id="btnText">
+                        Generate Plan
+                        <span class="btn-bubble-icon">
+                            <i data-lucide="sparkles"></i>
+                        </span>
+                    </span>
+                    <span id="btnLoader" class="loader hidden"></span>
+                </button>
+            </div>
+
+            <!-- Quick Action Pills -->
+            <div class="quick-prompts-label">Quick Ideas:</div>
+            <div class="quick-prompts">
+                <button onclick="setPrompt('Plan a complete 7 days Japan trip from Pakistan including flights, hotels and sightseeing under 2 lakhs.')">
+                    <span class="btn-dot bg-violet"></span> Japan Trip 🌸
+                </button>
+
+                <button onclick="setPrompt('Plan a 5 days Dubai trip from Pakistan with flights, hotels and sightseeing.')">
+                    <span class="btn-dot bg-yellow"></span> Dubai Luxury 🏙️
+                </button>
+
+                <button onclick="setPrompt('Plan a 7 days Thailand trip from Pakistan with budget hotels and sightseeing.')">
+                    <span class="btn-dot bg-pink"></span> Thailand Budget 🌴
+                </button>
+
+                <button onclick="setPrompt('Give me all country flight info.')">
+                    <span class="btn-dot bg-mint"></span> Global Flights ✈️
+                </button>
+            </div>
+
+        </section>
+
+        <!-- Result Section -->
+        <section id="resultSection" class="result-section hidden">
+            
+            <div class="result-header">
+                <div>
+                    <h2>Your AI Travel Plan 🎒</h2>
+                    <p id="threadInfo">Thread ID: -</p>
+                </div>
+
+                <div class="result-actions">
+                    <button class="copy-btn" onclick="copyResult()">
+                        <i data-lucide="copy" class="action-icon"></i>
+                        <span class="action-btn-text">Copy</span>
+                    </button>
+
+                    <button class="download-btn" onclick="downloadPDF()">
+                        <i data-lucide="download" class="action-icon"></i>
+                        <span class="action-btn-text">Download PDF</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="pdfContent" class="pdf-content">
+                <h1 class="pdf-title">TravelSwarm AI Travel Plan</h1>
+                <div id="resultBox" class="result-box"></div>
+            </div>
+
+        </section>
+
+        <!-- Error Feedback Box -->
+        <section id="errorBox" class="error-box hidden"></section>
+
+    </main>
+
+    <footer>
+        <div class="footer-badge">
+            Built with <strong>FastAPI</strong>, <strong>LangGraph</strong>, <strong>Groq</strong>, <strong>PostgreSQL</strong>, <strong>Tavily</strong> &amp; <strong>AviationStack</strong>
+        </div>
+    </footer>
+
+    <!-- Markdown Renderer -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- PDF Download Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Custom JS -->
+    <script src="/static/script.js"></script>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>

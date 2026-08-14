@@ -1,73 +1,73 @@
-import os 
+import os
 import certifi
-from dotenv import load_dotenv
+import uuid
+from typing import TypedDict, Annotated
+import operator
 
+from dotenv import load_dotenv
 load_dotenv()
+
 
 os.environ["SSL_CERT_FILE"] = certifi.where()
 os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 
-
-from typing import TypedDict, Annotated
-import operator
-import uuid
 import psycopg
 from psycopg.rows import dict_row
-from langgraph.graph import StateGraph,START,END
+from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.postgres import PostgresSaver
-from langchain_core.messages import (AnyMessage,HumanMessage,AIMessage,SystemMessage)
+from langchain_core.messages import AnyMessage, HumanMessage, AIMessage, SystemMessage
 from langchain_groq import ChatGroq
+
 from tools.tavily_tool import tavily_search
 from tools.flight_tool import search_flights
 
-DATABASE_URL=os.getenv("DATABASE_URL")
-GROQ_API_KEY=os.getenv("GROQ_API_KEY")
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 
-llm=ChatGroq(
+llm = ChatGroq(
     model="llama-3.3-70b-versatile",
     api_key=GROQ_API_KEY
 )
 
+
 class TravelState(TypedDict):
-    messages:Annotated[list[AnyMessage],operator.add]
-    user_query:str
-    flight_results:str
-    hotel_results:str
-    itinerary:str
-    llm_calls:int
+    messages: Annotated[list[AnyMessage], operator.add]
+    user_query: str
+    flight_results: str
+    hotel_results: str
+    itinerary: str
+    llm_calls: int
 
 
-#flight agent
+
 def flight_agent(state: TravelState):
-    query=state["user_query"]
-    flight_data=search_flights(query)
-
-    return{
-        "flight_results":flight_data,
-        "messages": [
-            AIMessage(content="Flight results fetched")
-        ],
-        "llm_calls":state.get("llm_calls",0)+1
-    }
-
-#hotel agent
-def hostel_agent(state: TravelState):
-    query=f"Best hotels for {state['user_query']}"
-    hostel_results=tavily_search(query)
+    query = state["user_query"]
+    flight_data = search_flights(query)
 
     return {
-        "hotel_results":hostel_results,
-        "messages":[
-            AIMessage(content="Hotel Information Fetched.")
-        ],
-        "llm_calls": state.get("llm_calls",0)+1
+        "flight_results": flight_data,
+        "messages": [AIMessage(content="Flight results fetched.")],
+        "llm_calls": state.get("llm_calls", 0)
     }
 
 
-#itinery agent
+
+def hostel_agent(state: TravelState):
+    query = f"Best hotels for {state['user_query']}"
+    hotel_results = tavily_search(query)
+
+    return {
+        "hotel_results": hotel_results,
+        "messages": [AIMessage(content="Hotel information fetched.")],
+        "llm_calls": state.get("llm_calls", 0) # No LLM call
+    }
+
+
+
 def itinary_agent(state: TravelState):
-    prompt= f"""
+    prompt = f"""
     Create a complete travel itinerary.
 
     User Query:
@@ -81,18 +81,20 @@ def itinary_agent(state: TravelState):
 
     Make the itinerary practical, budget-aware, and easy to follow.
     """
-    response=llm.invoke([SystemMessage(content="You are an expert travel planner"),
-                         HumanMessage(content=prompt)]
-                        )
+    response = llm.invoke([
+        SystemMessage(content="You are an expert travel planner."),
+        HumanMessage(content=prompt)
+    ])
 
     return {
-        "ininerary":response.content,
-        "messages":[response],
-        "llm_calls":state.get("llm_calls",0)+1
+        "itinerary": response.content,  
+        "messages": [response],
+        "llm_calls": state.get("llm_calls", 0) + 1
     }
 
-#final response agent
-def final_agent(state:TravelState):
+
+
+def final_agent(state: TravelState):
     final_prompt = f"""
     Generate the final travel response for the user.
 
@@ -123,71 +125,76 @@ def final_agent(state:TravelState):
     - Keep the response useful for real travel planning.
     """
 
-    response=llm.invoke([SystemMessage(content="you are a professional AI travel booking assistant"),
-                         HumanMessage(content=final_prompt)])
+    response = llm.invoke([
+        SystemMessage(content="You are a professional AI travel booking assistant."),
+        HumanMessage(content=final_prompt)
+    ])
+    
     return {
-        "messages":[response],
-        "llm_calls":state.get("llm_calls",0)+1
+        "messages": [response],
+        "llm_calls": state.get("llm_calls", 0) + 1
     }
 
 
-#build graph
+# Build Graph
+graph = StateGraph(TravelState)
+graph.add_node("flight_agent", flight_agent)
+graph.add_node("hotel_agent", hostel_agent)
+graph.add_node("itinerary_agent", itinary_agent)
+graph.add_node("final_agent", final_agent)
 
-graph=StateGraph(TravelState)
-graph.add_node("flight_agent",flight_agent)
-graph.add_node("hotel_agent",hostel_agent)
-graph.add_node("itinerary_agent",itinary_agent)
-graph.add_node("final_agent",final_agent)
+graph.add_edge(START, "flight_agent")
+graph.add_edge("flight_agent", "hotel_agent")
+graph.add_edge("hotel_agent", "itinerary_agent")
+graph.add_edge("itinerary_agent", "final_agent")
+graph.add_edge("final_agent", END)
 
-graph.add_edge(START,"flight_agent")
-graph.add_edge("flight_agent","hotel_agent")
-graph.add_edge("hotel_agent","itinerary_agent")
-graph.add_edge("itinerary_agent","final_agent")
-graph.add_edge("final_agent",END)
-
-conn=psycopg.connect(
+conn = psycopg.connect(
     DATABASE_URL,
     autocommit=True,
     row_factory=dict_row
 )
 
-checkpointer=PostgresSaver(conn)
+checkpointer = PostgresSaver(conn)
 checkpointer.setup()
 
-travel_graph=graph.compile(checkpointer=checkpointer)
+travel_graph = graph.compile(checkpointer=checkpointer)
 
 
-
-
-#functions for fastAPI
-def run_travel_agent(user_input:str, thread_id:str|None=None):
+def run_travel_agent(user_input: str, thread_id: str | None = None):
     if not thread_id:
-        thread_id=f"user_{uuid.uuid4().hex}"
+        thread_id = f"user_{uuid.uuid4().hex}"
 
-    config={
-        "configurable":{
-            "thread_id":thread_id
+    config = {
+        "configurable": {
+            "thread_id": thread_id
         }
-    }
-    result=travel_graph.invoke(
+    }    
+    result = travel_graph.invoke(
         {
-            "messages":[
-                HumanMessage(content=user_input)
-            ],
-            "user_query":user_input,
-            "flight_results":"",
-            "hotel_results":"",
-            "itinerary":"",
-            "llm_calls":0
+            "messages": [HumanMessage(content=user_input)],
+            "user_query": user_input,
+            "flight_results": "",
+            "hotel_results": "",
+            "itinerary": "",
+            "llm_calls": 0
         },
         config=config
     )
-    final_answer=result["messages"][-1].content
-    return{
-        "thread_id":thread_id,
-        "answer":final_answer,
+    
+    final_answer = result["messages"][-1].content
+    
+    return {
+        "thread_id": thread_id,
+        "answer": final_answer,
         "flight_results": result.get("flight_results", ""),
         "hotel_results": result.get("hotel_results", ""),
         "itinerary": result.get("itinerary", ""),
         "llm_calls": result.get("llm_calls", 0),
     }
+
+
+if __name__ == "__main__":
+    # Test Run locally
+    output = run_travel_agent("Plan a 5 days trip to Dubai from Pakistan")
+    print(output["answer"])
