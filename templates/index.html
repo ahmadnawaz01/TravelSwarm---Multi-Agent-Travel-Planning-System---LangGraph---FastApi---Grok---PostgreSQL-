@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TripMate AI — Playful Travel Planner</title>
+    <title>TravelSwarm</title>
     
     <!-- Design System Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,7 +31,7 @@
         <section class="hero-section">
             <div class="badge">
                 <span class="badge-icon-bubble">✈️</span>
-                <span>TripMate AI &bull; Multi-Agent Travel Planner</span>
+                <span>TravelSwarm AI &bull; Multi-Agent Travel Planner</span>
             </div>
 
             <h1>
@@ -51,7 +51,7 @@
                 <div>
                     <h2>Where do you want to go?</h2>
                     <p>
-                        Example: <em>Plan a complete 7 days Japan trip from Bangladesh under 2 lakhs.</em>
+                        Example: <em>Plan a complete 7 days Dubai trip from Pakistan under 5 lakhs.</em>
                     </p>
                 </div>
 
@@ -64,7 +64,7 @@
             <div class="input-area">
                 <textarea
                     id="userInput"
-                    placeholder="Plan a complete 7 days Japan trip including flights, hotels and sightseeing under 2 lakhs..."
+                    placeholder="Plan a complete 7 days Dubai trip including flights, hotels and sightseeing under 2 lakhs..."
                 ></textarea>
 
                 <button id="sendBtn" onclick="sendMessage()">
@@ -81,15 +81,15 @@
             <!-- Quick Action Pills -->
             <div class="quick-prompts-label">Quick Ideas:</div>
             <div class="quick-prompts">
-                <button onclick="setPrompt('Plan a complete 7 days Japan trip from Bangladesh including flights, hotels and sightseeing under 2 lakhs.')">
+                <button onclick="setPrompt('Plan a complete 7 days Japan trip from Pakistan including flights, hotels and sightseeing under 2 lakhs.')">
                     <span class="btn-dot bg-violet"></span> Japan Trip 🌸
                 </button>
 
-                <button onclick="setPrompt('Plan a 5 days Dubai trip from Dhaka with flights, hotels and sightseeing.')">
+                <button onclick="setPrompt('Plan a 5 days Dubai trip from Pakistan with flights, hotels and sightseeing.')">
                     <span class="btn-dot bg-yellow"></span> Dubai Luxury 🏙️
                 </button>
 
-                <button onclick="setPrompt('Plan a 7 days Thailand trip from Bangladesh with budget hotels and sightseeing.')">
+                <button onclick="setPrompt('Plan a 7 days Thailand trip from pakistan with budget hotels and sightseeing.')">
                     <span class="btn-dot bg-pink"></span> Thailand Budget 🌴
                 </button>
 
@@ -123,7 +123,7 @@
             </div>
 
             <div id="pdfContent" class="pdf-content">
-                <h1 class="pdf-title">TripMate AI Travel Plan</h1>
+                <h1 class="pdf-title">TravelSwarm AI Travel Plan</h1>
                 <div id="resultBox" class="result-box"></div>
             </div>
 
